@@ -1,0 +1,64 @@
+Sub MergeWorkbooks()
+    Dim SourceFolder As String
+    Dim TargetBook As Workbook
+    Dim SourceBook As Workbook
+    Dim SourceSheet As Worksheet
+    Dim TargetSheet As Worksheet
+    Dim userProfilePath As String
+    Dim Filename As String
+    
+    ' Get the user's profile path (typically the desktop location).
+    userProfilePath = Environ("USERPROFILE")
+    
+    ' Specify the source folder where the Excel files to be merged are located.
+    SourceFolder = userProfilePath & "\Desktop\merge"
+
+    ' Create a new workbook as the target workbook.
+    Set TargetBook = Workbooks.Add
+    
+    ' Attempt to delete the first sheet in the target workbook (if it exists).
+    On Error Resume Next
+    TargetBook.Sheets(1).Delete
+    On Error GoTo 0
+    
+    ' Check if the specified source folder exists.
+    If Dir(SourceFolder, vbDirectory) = "" Then
+        MsgBox "The 'merge' folder does not exist on the Desktop."
+        Exit Sub
+    End If
+
+    ' Initialize the Filename variable to the first Excel file in the source folder.
+    Filename = Dir(SourceFolder & "\*.xlsx")
+    
+    ' Loop through all Excel files in the source folder.
+    Do While Filename <> ""
+        ' Open each source workbook.
+        Set SourceBook = Workbooks.Open(SourceFolder & "\" & Filename)
+        
+        ' Loop through all sheets in the source workbook.
+        For Each SourceSheet In SourceBook.Sheets
+            ' Copy each sheet from the source workbook to the target workbook.
+            SourceSheet.Copy After:=TargetBook.Sheets(TargetBook.Sheets.Count)
+        Next SourceSheet
+        
+        ' Close the source workbook without saving changes.
+        SourceBook.Close False
+        
+        ' Get the next Excel file in the source folder.
+        Filename = Dir
+    Loop
+    
+    ' Check if there is more than one sheet in the target workbook.
+    If TargetBook.Sheets.Count > 1 Then
+        ' Disable display of alerts and delete the first sheet in the target workbook.
+        Application.DisplayAlerts = False
+        TargetBook.Sheets(1).Delete
+        Application.DisplayAlerts = True
+    End If
+    
+    ' Clear object references to release memory.
+    Set SourceBook = Nothing
+    Set TargetBook = Nothing
+    Set SourceSheet = Nothing
+    Set TargetSheet = Nothing
+End Sub
